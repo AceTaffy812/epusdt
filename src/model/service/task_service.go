@@ -225,7 +225,7 @@ func PolygonCallBack(token string, wg *sync.WaitGroup) {
 	}
 	for _, transfer := range polygonResp.Data {
 		confirmation, err := strconv.Atoi(transfer.Confirmations)
-		if transfer.To != token || confirmation < 1 || transfer.TokenSymbol != "USDT" {
+		if transfer.To != token || confirmation < config.GetPolygonConfirmation() || transfer.TokenSymbol != "USDT" {
 			continue
 		}
 		decimalQuant, err := decimal.NewFromString(transfer.Value)

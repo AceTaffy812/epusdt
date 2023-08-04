@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -71,6 +72,11 @@ func GetAppUri() string {
 
 func GetPolygonApi() string {
 	return viper.GetString("polygon_api")
+}
+
+func GetPolygonConfirmation() int {
+	confirmation, _ := strconv.Atoi(viper.GetString("polygon_confirmation"))
+	return confirmation
 }
 
 func GetApiAuthToken() string {
