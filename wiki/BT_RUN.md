@@ -15,11 +15,11 @@
 ### 二、导入Sql
 登录管理刚刚新增数据库，导入`Epusdt`所需的sql文件。 
 
-以下为示范0.01版本 最新数据库请以 https://github.com/assimon/epusdt/blob/master/sql/ 为准
+以下为示范0.01版本 最新数据库请以 https://github.com/fmnx/epusdt/blob/master/sql/ 为准
 
 #### 1.手动下载导入
 
-数据库地址:https://github.com/assimon/epusdt/blob/master/sql/v0.0.1.sql
+数据库地址:https://github.com/fmnx/epusdt/blob/master/sql/v0.0.1.sql
 ![导入Sql](img/sql.png)
 
 #### 2.使用phpMyAdmin导入
@@ -41,6 +41,7 @@ create table orders
     redirect_url         varchar(128)   null comment '同步回调地址',
     callback_num         int default 0  null comment '回调次数',
     callback_confirm     int default 2  null comment '回调是否已确认？ 1是 2否',
+    start_block          int default 0  null comment 'polygon链查询参数startblock',
     created_at           timestamp      null,
     updated_at           timestamp      null,
     deleted_at           timestamp      null,
@@ -60,6 +61,7 @@ create table wallet_address
         primary key,
     token      varchar(50)   not null comment '钱包token',
     status     int default 1 not null comment '1:启用 2:禁用',
+    channel    varchar(10) default 'trc20' comment '钱包所属链, trc20, polygon',
     created_at timestamp     null,
     updated_at timestamp     null,
     deleted_at timestamp     null
