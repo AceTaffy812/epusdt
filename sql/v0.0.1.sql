@@ -27,7 +27,7 @@ create table orders
 create index orders_block_transaction_id_index
     on orders (block_transaction_id);
 
--- auto-generated definition
+--  auto-generated definition
 create table wallet_address
 (
     id         int auto_increment
