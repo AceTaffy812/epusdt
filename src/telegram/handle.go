@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	ReplayAddWallet = "请发给我一个合法的钱包地址"
+	ReplayAddWallet = "请输入钱包地址以及链名, 中间用空格分开, 例如: \nTNEns8t9jbWENbStkQdVQtHMGpbsYsQjZK trc20\n0xb91dd8225Db88dE4E3CD7B7eC538677A2c1Be8Cb polygon"
 )
 
 func OnTextMessageHandle(c tb.Context) error {
