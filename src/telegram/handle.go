@@ -11,15 +11,21 @@ import (
 )
 
 const (
-	ReplayAddWallet = "请输入钱包地址以及链名, 中间用空格分开, 例如: \nTNEns8t9jbWENbStkQdVQtHMGpbsYsQjZK trc20\n0xb91dd8225Db88dE4E3CD7B7eC538677A2c1Be8Cb polygon"
+	ReplayAddWallet = "请输入钱包地址, 目前仅支持trc20与polygon链"
 )
 
 func OnTextMessageHandle(c tb.Context) error {
 	if c.Message().ReplyTo.Text == ReplayAddWallet {
 		defer bots.Delete(c.Message().ReplyTo)
-		info := strings.Split(c.Message().Text, " ")
-		walletAddress := info[0]
-		channel := info[1]
+		walletAddress := c.Message().Text
+		var channel = ""
+		if strings.HasPrefix(walletAddress, "T") {
+			channel = "trc20"
+		} else if strings.HasPrefix(walletAddress, "0x") {
+			channel = "polygon"
+		} else {
+			return c.Send("不支持该钱包地址！仅支持trc20或polygon钱包地址!")
+		}
 		_, err := data.AddWalletAddress(walletAddress, channel)
 		if err != nil {
 			return c.Send(err.Error())
