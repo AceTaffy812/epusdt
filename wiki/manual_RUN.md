@@ -5,12 +5,9 @@
 ## 1.下载源代码
 ```bash
 cd /var/www/
-mkdir epusdt
-chmod 777 -R /var/www/epusdt
+git clone https://github.com/fmnx/epusdt.git
 cd epusdt
-wget  https://github.com/assimon/epusdt/releases/download/v0.0.2/epusdt_v0.0.2_Linux_x86_64.tar.gz
-tar -xzf epusdt_v0.0.2_Linux_x86_64.tar.gz
-rm epusdt_v0.0.2_Linux_x86_64.tar.gz
+go run main.go http start
 ```
 ## 2.导入Sql
 - 创建sql文件
