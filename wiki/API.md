@@ -79,7 +79,7 @@ POST /api/v1/order/create-transaction
 {
   "order_id": "2022123321312321321",
   "amount": 100,
-  "channel": "trc20",
+  "channel": "polygon",
   "notify_url": "http://example.com/",
   "redirect_url": "http://example.com/",
   "signature": "xsadaxsaxsa"
@@ -93,7 +93,7 @@ POST /api/v1/order/create-transaction
 | body           |body| object | 否 ||                    |
 | » order_id     |body| string | 是 | 请求支付订单号            |                |
 | » amount       |body| number | 是 | 支付金额(CNY)          | 小数点保留后2位，最少0.01 |
-| » channel      |body| string | 是 | 所属链(trc20或polygon) |          |
+| » channel      |body| string | 否 | 所属链(trc20或polygon) | 不填则收 Polygon         |
 | » notify_url   |body| string | 是 | 异步回调地址             |                |
 | » redirect_url |body| string | 否 | 同步跳转地址             ||
 | » signature    |body| string | 是 | 签名                 | 接口统一加密方式       |
