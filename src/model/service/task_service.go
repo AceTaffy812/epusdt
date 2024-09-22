@@ -2,6 +2,11 @@ package service
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+	"sync"
+
 	"github.com/assimon/luuu/config"
 	"github.com/assimon/luuu/model/data"
 	"github.com/assimon/luuu/model/request"
@@ -15,9 +20,6 @@ import (
 	"github.com/gookit/goutil/stdutil"
 	"github.com/hibiken/asynq"
 	"github.com/shopspring/decimal"
-	"net/http"
-	"strconv"
-	"sync"
 )
 
 const UsdtTrc20ApiUri = "https://apilist.tronscanapi.com/api/transfer/trc20"
@@ -213,7 +215,7 @@ func PolygonCallBack(token string, wg *sync.WaitGroup) {
 	if resp.StatusCode() != http.StatusOK {
 		panic(err)
 	}
-	println(resp.String())
+	//println(resp.String())
 	var polygonResp PolygonResp
 	err = json.Cjson.Unmarshal(resp.Body(), &polygonResp)
 	if err != nil {
@@ -224,8 +226,11 @@ func PolygonCallBack(token string, wg *sync.WaitGroup) {
 		return
 	}
 	for _, transfer := range polygonResp.Data {
-		confirmation, err := strconv.Atoi(transfer.Confirmations)
-		if transfer.To != token || confirmation < config.GetPolygonConfirmation() || transfer.TokenSymbol != "USDT" {
+		confirmation, _ := strconv.Atoi(transfer.Confirmations)
+		isUSDT := strings.EqualFold(transfer.TokenSymbol, "USDT") && strings.EqualFold(transfer.ContractAddress, "0xc2132d05d31c914a87c6611c10748aeb04b58e8f")
+		isToThisAccount := strings.EqualFold(transfer.To, token) // polygon 地址不区分大小写
+		if !isUSDT || !isToThisAccount || confirmation < 5 {
+			fmt.Println("不符合条件的转账:", transfer)
 			continue
 		}
 		decimalQuant, err := decimal.NewFromString(transfer.Value)

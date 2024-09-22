@@ -8,7 +8,7 @@ type CreateTransactionRequest struct {
 	Amount      float64 `json:"amount" validate:"required|isFloat|gt:0.01"`
 	NotifyUrl   string  `json:"notify_url" validate:"required"`
 	Signature   string  `json:"signature"  validate:"required"`
-	Channel     string  `json:"channel"  validate:"required"`
+	Channel     string  `json:"channel"`
 	RedirectUrl string  `json:"redirect_url"`
 }
 

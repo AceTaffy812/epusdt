@@ -3,6 +3,12 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"net/http"
+	"strconv"
+	"sync"
+	"time"
+
 	"github.com/assimon/luuu/config"
 	"github.com/assimon/luuu/model/dao"
 	"github.com/assimon/luuu/model/data"
@@ -16,11 +22,6 @@ import (
 	"github.com/golang-module/carbon/v2"
 	"github.com/hibiken/asynq"
 	"github.com/shopspring/decimal"
-	"math/rand"
-	"net/http"
-	"strconv"
-	"sync"
-	"time"
 )
 
 const (
@@ -60,11 +61,14 @@ func CreateTransaction(req *request.CreateTransactionRequest) (*response.CreateT
 	// 有无可用钱包
 	channel := req.Channel
 	var walletAddress []mdb.WalletAddress
-	if channel == "trc20" {
+
+	switch channel {
+	case "trc20":
 		trc20Wallet, trc20Err := data.GetAvailableTrc20Wallet()
 		walletAddress = trc20Wallet
 		err = trc20Err
-	} else {
+	default:
+		channel = "polygon"
 		polygonWallet, polygonErr := data.GetAvailablePolygonWallet()
 		walletAddress = polygonWallet
 		err = polygonErr
@@ -84,11 +88,6 @@ func CreateTransaction(req *request.CreateTransactionRequest) (*response.CreateT
 	if availableToken == "" {
 		return nil, constant.NotAvailableAmountErr
 	}
-	apiKey := config.GetPolygonApi()
-	startBlock, err := getNowPolygonBlock(apiKey)
-	if err != nil {
-		return nil, err
-	}
 	tx := dao.Mdb.Begin()
 	order := &mdb.Orders{
 		TradeId:      GenerateCode(),
@@ -99,7 +98,14 @@ func CreateTransaction(req *request.CreateTransactionRequest) (*response.CreateT
 		Status:       mdb.StatusWaitPay,
 		NotifyUrl:    req.NotifyUrl,
 		RedirectUrl:  req.RedirectUrl,
-		StartBlock:   startBlock,
+	}
+	if channel == "polygon" {
+		apiKey := config.GetPolygonApi()
+		startBlock, err := getNowPolygonBlock(apiKey)
+		if err != nil {
+			return nil, err
+		}
+		order.StartBlock = startBlock
 	}
 	err = data.CreateOrderWithTransaction(tx, order)
 	if err != nil {
@@ -130,8 +136,10 @@ func CreateTransaction(req *request.CreateTransactionRequest) (*response.CreateT
 }
 
 func getNowPolygonBlock(apiKey string) (int, error) {
+	// TODO 可能会被 rate limit
+
 	client := http.Client{
-		Timeout: 30 * time.Second,
+		Timeout: 10 * time.Second,
 	}
 
 	resp, err := client.Get(fmt.Sprintf("https://api.polygonscan.com/api?module=block&action=getblocknobytime&timestamp=%d&closest=before&apikey=%s", time.Now().Unix(), apiKey))
