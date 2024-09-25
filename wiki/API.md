@@ -92,7 +92,8 @@ POST /api/v1/order/create-transaction
 |----------------|---|--------|---|--------------------|----------------|
 | body           |body| object | 否 ||                    |
 | » order_id     |body| string | 是 | 请求支付订单号            |                |
-| » amount       |body| number | 是 | 支付金额(CNY)          | 小数点保留后2位，最少0.01 |
+| » amount       |body| number | 是 | 请求支付金额 `CNY 或 任何币种`         | 小数点保留后2位，最少0.01 |
+| » exchange_rate|body| string | 否 | 汇率 `x`  | `x` 支付金额 = 1 USDT，不填则默认为 `usd to cny` 的汇率        |
 | » channel      |body| string | 否 | 所属链(trc20或polygon) | 不填则收 Polygon         |
 | » notify_url   |body| string | 是 | 异步回调地址             |                |
 | » redirect_url |body| string | 否 | 同步跳转地址             ||
@@ -135,7 +136,7 @@ POST /api/v1/order/create-transaction
 | » data             | object  | 返回数据      ||
 | »» trade_id        | string  | 交易号       ||
 | »» order_id        | string  | 请求支付订单号   ||
-| »» amount          | float | 请求支付金额    | CNY,保留2位小数                    |
+| »» amount          | float | 请求支付金额    | 保留2位小数                    |
 | »» actual_amount   | float   | 实际需要支付的金额 | USDT,保留四位小数                   |
 | »» token           | string  | 钱包地址      |                               |
 | »» expiration_time | integer | 过期时间      | 时间戳秒                          |

@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
 var (
@@ -55,7 +56,7 @@ func Init() {
 }
 
 func GetAppVersion() string {
-	return "0.0.2"
+	return "0.0.3"
 }
 
 func GetAppName() string {

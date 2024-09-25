@@ -38,9 +38,13 @@ func CreateTransaction(req *request.CreateTransactionRequest) (*response.CreateT
 	gCreateTransactionLock.Lock()
 	defer gCreateTransactionLock.Unlock()
 	payAmount := math.MustParsePrecFloat64(req.Amount, 2)
+	// 确定汇率
+	decimalRate, err := decimal.NewFromString(req.ExchangeRate)
+	if err != nil || decimalRate.LessThanOrEqual(decimal.Zero) {
+		decimalRate = decimal.NewFromFloat(config.GetUsdtRate())
+	}
 	// 按照汇率转化USDT
 	decimalPayAmount := decimal.NewFromFloat(payAmount)
-	decimalRate := decimal.NewFromFloat(config.GetUsdtRate())
 	decimalUsdt := decimalPayAmount.Div(decimalRate)
 	// cny 是否可以满足最低支付金额
 	if decimalPayAmount.Cmp(decimal.NewFromFloat(CnyMinimumPaymentAmount)) == -1 {
