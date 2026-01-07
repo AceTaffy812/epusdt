@@ -94,7 +94,7 @@ POST /api/v1/order/create-transaction
 | » order_id     |body| string | 是 | 请求支付订单号            |                |
 | » amount       |body| number | 是 | 请求支付金额 `CNY 或 任何币种`         | 小数点保留后2位，最少0.01 |
 | » exchange_rate|body| string | 否 | 汇率 `x`  | `x` 支付金额 = 1 USDT，不填则默认为 `usd to cny` 的汇率        |
-| » channel      |body| string | 否 | 所属链(trc20/polygon/bsc/avax-c/eth/aptos) | 不填则收 polygon         |
+| » channel      |body| string | 否 | 所属链(trc20/polygon/bsc/avax-c/eth/aptos/arb) | 不填则收 polygon         |
 | » notify_url   |body| string | 是 | 异步回调地址             |                |
 | » redirect_url |body| string | 否 | 同步跳转地址             ||
 | » signature    |body| string | 是 | 签名                 | 接口统一加密方式       |

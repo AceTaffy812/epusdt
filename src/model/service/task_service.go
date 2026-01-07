@@ -212,6 +212,8 @@ func EtherscanApiScan(chainName, token string, wg *sync.WaitGroup) {
 		chainId = "43114"
 	case model.ChainNameETH:
 		chainId = "1"
+	case model.ChainNameArbitrum:
+		chainId = "42161"
 	default:
 		return
 	}
@@ -225,6 +227,8 @@ func EtherscanApiScan(chainName, token string, wg *sync.WaitGroup) {
 		usdtContract = "0x9702230a8ea53601f5cd2dc00fdbc13d4df4a8c7"
 	case model.ChainNameETH:
 		usdtContract = "0xdac17f958d2ee523a2206206994597c13d831ec7"
+	case model.ChainNameArbitrum:
+		usdtContract = "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9"
 	default:
 		return
 	}

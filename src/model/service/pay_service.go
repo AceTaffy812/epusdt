@@ -40,6 +40,8 @@ func GetCheckoutCounterByTradeId(tradeId string) (*response.CheckoutCounterRespo
 		channel = "TRON - TRC20"
 	case model.ChainNameAptos:
 		channel = "Aptos"
+	case model.ChainNameArbitrum:
+		channel = "Arbitrum One"
 	}
 	resp := &response.CheckoutCounterResponse{
 		TradeId:        orderInfo.TradeId,

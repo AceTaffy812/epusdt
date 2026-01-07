@@ -39,6 +39,7 @@ func (r ListenEvmJob) Run() {
 	listerner(model.ChainNameAVAXC)
 	listerner(model.ChainNameBSC)
 	listerner(model.ChainNameETH)
+	listerner(model.ChainNameArbitrum)
 
 	wg.Wait()
 }
