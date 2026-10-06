@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	CacheWalletAddressWithAmountToTradeIdKey = "wallet:%s_%v" // 钱包（带有链前缀）_待支付金额 : 交易号
+	CacheWalletAddressWithAmountToTradeIdKey = "wallet:%s:%s:%s_%v" // 链:资产:钱包_待支付金额 : 交易号
 )
 
 // GetOrderInfoByOrderId 通过客户订单号查询订单
@@ -80,9 +80,9 @@ func UpdateOrderIsExpirationById(id uint64) error {
 }
 
 // GetTradeIdByWalletAddressAndAmount 通过钱包地址，支付金额获取交易号
-func GetTradeIdByWalletAddressAndAmount(tokenWithChainPrefix string, amount float64) (string, error) {
+func GetTradeIdByWalletAddressAndAmount(chain, asset, address string, amount float64) (string, error) {
 	ctx := context.Background()
-	cacheKey := fmt.Sprintf(CacheWalletAddressWithAmountToTradeIdKey, tokenWithChainPrefix, amount)
+	cacheKey := fmt.Sprintf(CacheWalletAddressWithAmountToTradeIdKey, chain, asset, address, amount)
 	result, err := dao.Rdb.Get(ctx, cacheKey).Result()
 	if err == redis.Nil {
 		return "", nil
@@ -94,26 +94,26 @@ func GetTradeIdByWalletAddressAndAmount(tokenWithChainPrefix string, amount floa
 }
 
 // LockTransaction 锁定交易
-func LockTransaction(tokenWithChainPrefix, tradeId string, amount float64, expirationTime time.Duration) error {
+func LockTransaction(chain, asset, address, tradeId string, amount float64, expirationTime time.Duration) error {
 	ctx := context.Background()
-	cacheKey := fmt.Sprintf(CacheWalletAddressWithAmountToTradeIdKey, tokenWithChainPrefix, amount)
+	cacheKey := fmt.Sprintf(CacheWalletAddressWithAmountToTradeIdKey, chain, asset, address, amount)
 	err := dao.Rdb.Set(ctx, cacheKey, tradeId, expirationTime).Err()
 	return err
 }
 
 // UnLockTransaction 解锁交易
-func UnLockTransaction(tokenWithChainPrefix string, amount float64) error {
+func UnLockTransaction(chain, asset, address string, amount float64) error {
 	ctx := context.Background()
-	cacheKey := fmt.Sprintf(CacheWalletAddressWithAmountToTradeIdKey, tokenWithChainPrefix, amount)
+	cacheKey := fmt.Sprintf(CacheWalletAddressWithAmountToTradeIdKey, chain, asset, address, amount)
 	err := dao.Rdb.Del(ctx, cacheKey).Err()
 	return err
 }
 
 // IsWalletLocked 查询钱包是否已被锁定（有任意金额的订单）
 // 结果可能不太准确，倾向于已被锁定
-func IsWalletLocked(tokenWithChainPrefix string) bool {
+func IsWalletLocked(chain, asset, address string) bool {
 	ctx := context.Background()
-	cacheKey := fmt.Sprintf(CacheWalletAddressWithAmountToTradeIdKey, tokenWithChainPrefix, "*")
+	cacheKey := fmt.Sprintf(CacheWalletAddressWithAmountToTradeIdKey, chain, asset, address, "*")
 
 	var cursor uint64
 	// var count uint64

@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	ReplayAddWallet = "请输入钱包地址, 目前仅支持 trc20 eth polygon bsc avax-c aptos 链。"
+	ReplayAddWallet = "请输入钱包地址, 目前仅支持 trc20 eth polygon bsc avax-c aptos plasma 链。"
 )
 
 func OnTextMessageHandle(c tb.Context) error {
@@ -24,7 +24,7 @@ func OnTextMessageHandle(c tb.Context) error {
 		if strings.HasPrefix(walletAddress, "T") {
 			channel = model.ChainNameTRC20
 		} else if strings.HasPrefix(walletAddress, "0x") {
-			return c.Send("EVM 系列钱包地址请在地址前加上所属链和英文冒号，以区分不同的链，例如 eth: polygon: bsc: avax-c: aptos:")
+			return c.Send("EVM 系列钱包地址请在地址前加上所属链和英文冒号，以区分不同的链，例如 eth: polygon: bsc: avax-c: plasma: aptos:")
 		} else if strings.HasPrefix(walletAddress, "polygon:0x") {
 			channel = model.ChainNamePolygonPOS
 			walletAddress = strings.TrimPrefix(walletAddress, "polygon:")
@@ -37,6 +37,9 @@ func OnTextMessageHandle(c tb.Context) error {
 		} else if strings.HasPrefix(walletAddress, "eth:0x") {
 			channel = model.ChainNameETH
 			walletAddress = strings.TrimPrefix(walletAddress, "eth:")
+		} else if strings.HasPrefix(walletAddress, "plasma:0x") {
+			channel = model.ChainNamePlasma
+			walletAddress = strings.TrimPrefix(walletAddress, "plasma:")
 		} else if strings.HasPrefix(walletAddress, "aptos:0x") {
 			channel = model.ChainNameAptos
 			walletAddress = strings.TrimPrefix(walletAddress, "aptos:")

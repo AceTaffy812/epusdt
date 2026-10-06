@@ -67,13 +67,35 @@ signature : 1cd4b52df5587cfb1968b0c0c6e156cd
     }
 ```
 
-# 创建交易接口
+## 接口列表
 
-## POST 创建交易
+### 返回字段兼容性说明
 
+以下说明同时适用于“创建交易”和“创建选择支付方式订单”两个接口：除 `trade_id` 和 `payment_url` 外，其他返回值不建议作为稳定接口依赖，因为其语义可能发生变化。确实需要使用其他字段时，请先确认当前 Epusdt 版本对应的接口定义。
+
+### 1. 创建交易
+
+创建交易订单并获取收银台链接。
+
+#### 请求地址
+
+```http
 POST /api/v1/order/create-transaction
+```
 
-> Body 请求参数
+#### 请求参数
+
+| 参数名 | 类型 | 必填 | 说明 |
+|---|---|:---:|---|
+| `order_id` | string | ✅ | 商户订单编号。 |
+| `amount` | number | ✅ | 请求支付金额，当前使用 CNY，最少 `0.01`，小数点后保留 2 位。 |
+| `exchange_rate` | string | ❌ | 汇率：`x` 表示 `x` 单位法币兑换 1 USDT；不填则使用系统配置汇率。 |
+| `channel` | string | ❌ | 支付链与资产。不填默认为 Polygon USDT；USDC 使用 `polygon_usdc` 等复合值。完整列表见 [链与资产](ASSET.md)。 |
+| `notify_url` | string | ✅ | 支付结果异步回调地址。 |
+| `redirect_url` | string | ❌ | 支付成功后的同步跳转地址。 |
+| `signature` | string | ✅ | 签名字符串，详见[接口统一加密方式](#接口统一加密方式)。 |
+
+#### 请求示例
 
 ```json
 {
@@ -85,23 +107,22 @@ POST /api/v1/order/create-transaction
   "signature": "xsadaxsaxsa"
 }
 ```
+#### 响应参数
 
-### 请求参数
+| 参数名 | 类型 | 说明 |
+|---|---|---|
+| `status_code` | number | 状态码，`200` 表示成功。 |
+| `message` | string | 响应消息。 |
+| `data.trade_id` | string | 系统交易 ID。 |
+| `data.order_id` | string | 商户订单编号。 |
+| `data.amount` | number | 请求支付金额（法币）。 |
+| `data.actual_amount` | number | 实际需要支付的加密货币金额，币种由请求的 `channel` 决定。 |
+| `data.token` | string | 收款钱包地址。 |
+| `data.expiration_time` | number | 订单过期时间，Unix 时间戳（秒）。 |
+| `data.payment_url` | string | 收银台订单链接。 |
+| `request_id` | string | 请求 ID。 |
 
-| 名称             |位置| 类型     |必选| 中文名                | 说明             |
-|----------------|---|--------|---|--------------------|----------------|
-| body           |body| object | 否 ||                    |
-| » order_id     |body| string | 是 | 请求支付订单号            |                |
-| » amount       |body| number | 是 | 请求支付金额 `CNY 或 任何币种`         | 小数点保留后2位，最少0.01 |
-| » exchange_rate|body| string | 否 | 汇率 `x`  | `x` 支付金额 = 1 USDT，不填则默认为 `usd to cny` 的汇率        |
-| » channel      |body| string | 否 | 所属链(trc20/polygon/bsc/avax-c/eth/aptos) | 不填则收 polygon         |
-| » notify_url   |body| string | 是 | 异步回调地址             |                |
-| » redirect_url |body| string | 否 | 同步跳转地址             ||
-| » signature    |body| string | 是 | 签名                 | 接口统一加密方式       |
-
-> 返回示例
-
-> 成功
+#### 响应示例
 
 ```json
 {
@@ -119,30 +140,73 @@ POST /api/v1/order/create-transaction
   "request_id": "b1344d70-ff19-4543-b601-37abfb3b3686"
 }
 ```
-### 返回结果
 
-|状态码|状态码含义|说明|数据模型|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|成功|Inline|
+### 2. 创建选择支付方式订单
 
-### 返回数据结构
+创建支付方式选择收银台。该接口不会立即创建链上收款订单，用户会在收银台选择支付链与资产后再创建实际交易。请求中的 `channel` 字段会被忽略。
 
-状态码 **200**
+#### 请求地址
 
-| 名称                 | 类型      | 解释        | 说明                            |
-|--------------------|---------|-----------|-------------------------------|
-| » status_code      | integer | 请求状态      | 请参考下方[status_code返回状态码及含义](#status_code返回状态码及含义) |
-| » message          | string  | 消息        ||
-| » data             | object  | 返回数据      ||
-| »» trade_id        | string  | 交易号       ||
-| »» order_id        | string  | 请求支付订单号   ||
-| »» amount          | float | 请求支付金额    | 保留2位小数                    |
-| »» actual_amount   | float   | 实际需要支付的金额 | USDT,保留四位小数                   |
-| »» token           | string  | 钱包地址      |                               |
-| »» expiration_time | integer | 过期时间      | 时间戳秒                          |
-| »» payment_url     | string  | 收银台地址     |                               |
-| » request_id       | string  | true      |                               |
+```http
+POST /api/v1/order/create-order
+```
 
+为兼容某些会自动向接口地址附加路径的插件，以下形式也会按本接口处理：
+
+```
+POST /api/v1/order/create-order/api/v1/order/xxxx
+```
+
+#### 请求参数
+
+请求字段与[创建交易](#1-创建交易)完全一致，其中 `channel` 可传可不传，但不会影响最终的支付链和币种；最终支付方式由付款用户在收银台选择。
+
+#### 请求示例
+
+```json
+{
+  "order_id": "2022123321312321321",
+  "amount": 100,
+  "channel": "trc20",
+  "notify_url": "http://example.com/",
+  "redirect_url": "http://example.com/",
+  "signature": "xsadaxsaxsa"
+}
+```
+
+#### 响应参数
+
+| 参数名 | 类型 | 说明 |
+|---|---|---|
+| `status_code` | number | 状态码，`200` 表示成功。 |
+| `message` | string | 响应消息。 |
+| `data.fiat` | string | 交易法币类型，当前固定为 `CNY`。 |
+| `data.trade_id` | string | 系统交易 ID，同时也是最终写入订单的交易 ID。 |
+| `data.order_id` | string | 商户订单编号。 |
+| `data.amount` | string | 请求支付金额（法币）。 |
+| `data.status` | string | 订单状态，`1` 表示待付款。 |
+| `data.expiration_time` | number | 订单有效期（秒）。 |
+| `data.payment_url` | string | 收银台订单链接。 |
+| `request_id` | string | 请求 ID。 |
+
+#### 响应示例
+
+```json
+{
+  "status_code": 200,
+  "message": "success",
+  "data": {
+    "fiat": "CNY",
+    "trade_id": "202610051648208648961728",
+    "order_id": "2022123321312321321",
+    "amount": "100.00",
+    "status": "1",
+    "expiration_time": 600,
+    "payment_url": "http://example.com/pay/checkout-order/202610051648208648961728"
+  },
+  "request_id": "b1344d70-ff19-4543-b601-37abfb3b3686"
+}
+```
 
 # 异步回调
 
@@ -175,7 +239,7 @@ POST 【异步回调地址】
 |» trade_id|body| string | 是 | 交易号                 |                 |
 |» order_id|body| string | 是 | 请求支付订单号             |                 |
 |» amount|body| float  | 是 | 支付金额(CNY)           | 小数点保留后2位 |
-|» actual_amount|body| float  | 是 | 实际需要支付的usdt金额(USDT) | 小数点保留后4位 |
+|» actual_amount|body| float  | 是 | 实际需要支付的稳定币金额 | 币种由原请求的 `channel` 确定；回调字段及签名保持不变 |
 |» token|body| string | 是 | 钱包地址                | |
 |» block_transaction_id|body| string | 是 | 区块交易号               |  |
 |» signature|body| string | 是 | 签名                  |                 |

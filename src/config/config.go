@@ -3,13 +3,16 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
 )
 
 var (
-	AppDebug    bool
+	AppDebug bool
+	// AppVersion is set by GoReleaser through ldflags. Local builds use dev.
+	AppVersion  = "dev"
 	MysqlDns    string
 	RuntimePath string
 	LogSavePath string
@@ -56,10 +59,6 @@ func Init() {
 	TgManage = viper.GetInt64("tg_manage")
 }
 
-func GetAppVersion() string {
-	return "0.0.7"
-}
-
 func GetAppName() string {
 	appName := viper.GetString("app_name")
 	if appName == "" {
@@ -89,6 +88,57 @@ func GetUsdtRate() float64 {
 		return 6.4
 	}
 	return UsdtRate
+}
+
+// IsPaymentAssetEnabled returns true for every built-in asset when the optional
+// enabled_channel setting is absent. Explicit settings use chain_asset values.
+func IsPaymentAssetEnabled(chain, asset string) bool {
+	raw := strings.TrimSpace(viper.GetString("enabled_channel"))
+	if raw == "" {
+		return true
+	}
+	wanted := strings.ToLower(chain + "_" + asset)
+	for _, value := range strings.Split(raw, ",") {
+		value = normalizeEnabledChannel(value)
+		if value == wanted || value == strings.ToLower(chain) {
+			return true
+		}
+	}
+	return false
+}
+
+// GetPaymentChainOrder returns the network order configured in enabled_channel.
+// The first occurrence of a network wins, so both chain_asset values and base
+// chain values can be used to control the order shown by the checkout.
+func GetPaymentChainOrder() []string {
+	raw := strings.TrimSpace(viper.GetString("enabled_channel"))
+	if raw == "" {
+		return nil
+	}
+
+	order := make([]string, 0)
+	seen := make(map[string]struct{})
+	for _, value := range strings.Split(raw, ",") {
+		value = normalizeEnabledChannel(value)
+		if value == "" {
+			continue
+		}
+		chain := value
+		if index := strings.IndexByte(value, '_'); index >= 0 {
+			chain = value[:index]
+		}
+		if _, ok := seen[chain]; ok {
+			continue
+		}
+		seen[chain] = struct{}{}
+		order = append(order, chain)
+	}
+	return order
+}
+
+func normalizeEnabledChannel(value string) string {
+	value = strings.ToLower(strings.TrimSpace(value))
+	return strings.ReplaceAll(value, "_-_", "_")
 }
 
 func GetOrderExpirationTime() int {

@@ -3,6 +3,7 @@ package task
 import (
 	"sync"
 
+	"github.com/assimon/luuu/config"
 	"github.com/assimon/luuu/model"
 	"github.com/assimon/luuu/model/data"
 	"github.com/assimon/luuu/model/service"
@@ -30,8 +31,10 @@ func (r ListenEvmJob) Run() {
 			return
 		}
 		for _, address := range walletAddress {
-			wg.Add(1)
-			go service.EtherscanApiScan(chainName, address.Token, &wg)
+			for _, asset := range model.EnabledPaymentAssets(chainName, config.IsPaymentAssetEnabled) {
+				wg.Add(1)
+				go service.EtherscanApiScan(asset, address.Token, &wg)
+			}
 		}
 	}
 
@@ -39,6 +42,7 @@ func (r ListenEvmJob) Run() {
 	listerner(model.ChainNameAVAXC)
 	listerner(model.ChainNameBSC)
 	listerner(model.ChainNameETH)
+	listerner(model.ChainNamePlasma)
 
 	wg.Wait()
 }

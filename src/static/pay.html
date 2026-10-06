@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Epusdt - 优雅的usdt支付中间件</title>
+    <style>
+        .main {
+            width: 320px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding-top: 20px;
+            box-sizing: border-box;
+        }
+
+        .main .logo {
+            width: 65px;
+            height: 65px;
+            margin: 0 auto 20px;
+        }
+
+        .main .site {
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            padding-bottom: 20px;
+        }
+
+        .main .logo img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .main .gray-text {
+            font-size: 14px;
+            text-align: center;
+            color: #bebebe;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .main .red-text {
+            font-size: 14px;
+            text-align: center;
+            color: #f00;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .copy-hint {
+            width: 90%;
+            margin: 0 auto 12px;
+            padding: 10px 12px;
+            box-sizing: border-box;
+            border: 1px solid #ffb74d;
+            border-radius: 8px;
+            background-color: #fff8e1;
+            color: #e65100;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .qr-code-container {
+            width: 90%;
+            margin: 0 auto 20px;
+            background-color: #fff;
+            border-radius: 10px;
+        }
+
+        .qr-code-container h2 {
+            font-size: 20px;
+            text-align: center;
+            color: #333;
+            margin: 20px;
+        }
+
+        .qr-code-container h2 small {
+            color: #bebebe;
+            font-size: 80%;
+            padding-left: 5px;
+        }
+
+        .copyable-amount {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            color: #1565c0;
+            cursor: pointer;
+            text-decoration: underline;
+            text-decoration-style: dashed;
+            text-underline-offset: 3px;
+        }
+
+        .copyable-amount:hover,
+        .copyable-amount:active {
+            background-color: #e3f2fd;
+        }
+
+        .copy-label {
+            margin: -8px auto 6px;
+            color: #2e7d32;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .address-text {
+            position: relative;
+            display: block;
+            width: 90%;
+            box-sizing: border-box;
+            padding: 12px 10px;
+            border: 2px dashed #4caf50;
+            border-radius: 8px;
+            background-color: #f1f8e9;
+            overflow-wrap: break-word;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            color: #256029;
+            cursor: pointer;
+            margin: 0 auto 20px;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+
+        .address-text:hover,
+        .address-text:active {
+            background-color: #e1f2d3;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
+        }
+
+        .qr-code {
+            width: 220px;
+            height: 220px;
+            border: 1px solid #f2f2f2;
+            margin: 20px auto;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .qr-code>img {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .timer {
+            width: 140px;
+            margin: 0 auto;
+            font-size: 14px;
+        }
+
+        .timer .label {
+            display: flex;
+            align-items: center;
+        }
+
+        .timer .label,
+        .timer .value {
+            display: flex;
+            align-items: center;
+            padding: 5px 0;
+        }
+
+        .timer .label span {
+            color: #999;
+        }
+
+        .timer .value span {
+            color: #333;
+            font-size: 16px;
+        }
+
+        .timer .label span,
+        .timer .value span {
+            flex: 1;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <div class="logo">
+            {{if .AssetIcon}}
+            <img src="{{.AssetIcon}}" alt="{{.Asset}}">
+            {{end}}
+        </div>
+        <div class="site">
+            订单编号：{{.TradeId}}
+        </div>
+        {{if eq .Chain "TRON - TRC20"}}
+        <p class="red-text" style="font-size: large;color: white;background-color: indianred;">公益提示：<br>Tron (Trc20)
+            是目前最贵的区块链网络，强烈推荐改用低手续费的其他网络，不要再用 Tron 了！</p>
+        {{end}}
+        <div class="red-text">当前付款网络为【{{.Chain}}】，到账金额需要与下方显示的金额一致，否则系統无法确认！！</div>
+        <div class="copy-hint">👇 点击下方付款地址或付款金额即可复制</div>
+        <div class="qr-code-container">
+            <h2><span id="copy-amount" class="copyable-amount"
+                    data-clipboard-text="{{.ActualAmount}}">{{.ActualAmount}}</span>
+                <small>{{.Asset}}</small>
+            </h2>
+            <div class="copy-label">付款地址 · 点击复制</div>
+            <p class="address-text" id="copy-token" data-clipboard-text="{{.Token}}">
+                {{.Token}}
+            </p>
+            <div class="qr-code">
+
+            </div>
+            <div class="timer">
+                <div class="value">
+                    <span class="hours">00</span>
+                    <i>:</i>
+                    <span class="minutes">00</span>
+                    <i>:</i>
+                    <span class="seconds">00</span>
+                </div>
+                <div class="label">
+                    <span>时</span>
+                    <span>分</span>
+                    <span>秒</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h4>📋 转账说明</h4>
+            <ol>
+                <li>必须使用 <strong>{{.Chain}} 网络</strong> 进行转账</li>
+                <li>币种为 {{.Asset}}，合约地址（不是付款地址）为 <strong id="contract-address"
+                        data-contract="{{.Contract}}"></strong>，请勿转入其他币种！</li>
+                <li>转账完成后系统会自动确认到账</li>
+                <li>转账金额必须与显示金额完全一致</li>
+                <li>如果有其它疑问，请联系客服处理</li>
+            </ol>
+        </div>
+    </div>
+</body>
+
+</html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/layer/3.5.1/layer.min.js"></script>
+<script>
+    // 支付时间倒计时
+    function clock() {
+        let timeout = new Date({{.ExpirationTime }});
+    let now = new Date();
+    let ms = timeout.getTime() - now.getTime();//时间差的毫秒数
+    let second = Math.round(ms / 1000);
+    let minute = Math.floor(second / 60);
+    let hour = Math.floor(minute / 60);
+    if (minute > 60) minute %= 60
+    if (ms <= 0) {
+        layer.alert("支付超时，请重新发起支付！", { icon: 5 });
+        return;
+    }
+    $('.hours').text(hour.toString().padStart(2, '0'));
+    $('.minutes').text(minute.toString().padStart(2, '0'));
+    $('.seconds').text((second % 60).toString().padStart(2, '0'));
+    return setTimeout(clock, 1000);
+  }
+    setTimeout(clock, 1000);
+
+    $('.qr-code').qrcode({
+        text: "{{.Token}}",
+        width: 200,
+        height: 200,
+        foreground: "#000000",
+        background: "#ffffff",
+        typeNumber: -1
+    });
+
+    // 合约地址仅显示头尾 6 位，避免占用过多页面空间
+    function formatContractAddress(address) {
+        if (address.length <= 12) {
+            return address;
+        }
+        return address.slice(0, 6) + '...' + address.slice(-6);
+    }
+    document.getElementById('contract-address').textContent = formatContractAddress(
+        document.getElementById('contract-address').dataset.contract
+    );
+
+    // 金额复制
+    var copyAmount = new ClipboardJS('#copy-amount');
+    copyAmount.on('success', function (e) {
+        layer.msg('复制金额成功', { icon: 1 });
+    });
+    copyAmount.on('error', function (e) {
+        layer.msg('复制金额失败', { icon: 5 });
+    });
+
+    // 钱包复制
+    var copyToken = new ClipboardJS('#copy-token');
+    copyToken.on('success', function (e) {
+        layer.msg('复制钱包地址成功', { icon: 1 });
+    });
+    copyToken.on('error', function (e) {
+        layer.msg('复制钱包地址失败', { icon: 5 });
+    });
+
+    function checkOrderStatus() {
+        $.ajax({
+            type: "GET",
+            dataType: "json",
+            url: "../check-status/{{.TradeId}}",
+            timeout: 10000,
+            success: function (response, status) {
+                if (response.data.status == 2) {
+                    layer.msg('支付成功，正在跳转中...', { icon: 16, shade: 0.01, time: 20000 });
+                    window.location.href = {{.RedirectUrl
+        }};
+        } else {
+        setTimeout("checkOrderStatus()", 2000);
+    }
+      },
+    //Ajax请求超时，继续查询
+    error: function (e) {
+        setTimeout("checkOrderStatus()", 2000);
+    }
+    });
+  }
+    window.onload = checkOrderStatus;
+</script>

@@ -7,9 +7,9 @@ const (
 
 // WalletAddress  钱包表
 type WalletAddress struct {
-	Token   string `gorm:"column:token" json:"token"`     //  钱包token
+	Token   string `gorm:"column:token" json:"token"`     //  钱包token（不带链前缀）
 	Status  int64  `gorm:"column:status" json:"status"`   //  1:启用 2:禁用
-	Channel string `gorm:"column:channel" json:"channel"` //  链类
+	Channel string `gorm:"column:channel" json:"channel"` //  所属链
 	BaseModel
 }
 

@@ -2,6 +2,7 @@ package handle
 
 import (
 	"context"
+	"strings"
 
 	"github.com/assimon/luuu/model/data"
 	"github.com/assimon/luuu/model/mdb"
@@ -28,7 +29,11 @@ func OrderExpirationHandle(ctx context.Context, t *asynq.Task) error {
 	if err != nil {
 		return err
 	}
-	err = data.UnLockTransaction(orderInfo.TokenWithChainPrefix, orderInfo.ActualAmount)
+	parts := strings.SplitN(orderInfo.WalletAddress, ":", 2)
+	if len(parts) != 2 {
+		return nil
+	}
+	err = data.UnLockTransaction(parts[0], orderInfo.Asset, parts[1], orderInfo.ActualAmount)
 	if err != nil {
 		return err
 	}

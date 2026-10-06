@@ -19,6 +19,7 @@ builds:
       - -trimpath
     ldflags:
       - -s -w
+      - -X github.com/assimon/luuu/config.AppVersion={{ .Version }}
 archives:
   - id: epusdt
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"

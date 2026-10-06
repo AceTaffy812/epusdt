@@ -13,6 +13,6 @@ func main() {
 		}
 	}()
 	color.Green.Printf("%s\n", "  _____                     _ _   \n | ____|_ __  _   _ ___  __| | |_ \n |  _| | '_ \\| | | / __|/ _` | __|\n | |___| |_) | |_| \\__ \\ (_| | |_ \n |_____| .__/ \\__,_|___/\\__,_|\\__|\n       |_|                        ")
-	color.Infof("Epusdt version(%s) Powered by %s %s \n", config.GetAppVersion(), "assimon", "https://github.com/assimon/epusdt")
+	color.Infof("Epusdt version(%s) Powered by %s %s \n", config.AppVersion, "assimon", "https://github.com/assimon/epusdt")
 	bootstrap.Start()
 }

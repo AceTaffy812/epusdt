@@ -11,6 +11,18 @@ type CreateTransactionResponse struct {
 	PaymentUrl     string  `json:"payment_url"`     // 收银台地址
 }
 
+// CreateOrderResponse is returned before the payer selects a payment method.
+// Amount and Status are strings to match the external create-order response contract.
+type CreateOrderResponse struct {
+	Fiat           string `json:"fiat"`
+	TradeId        string `json:"trade_id"`
+	OrderId        string `json:"order_id"`
+	Amount         string `json:"amount"`
+	Status         string `json:"status"`
+	ExpirationTime int64  `json:"expiration_time"`
+	PaymentUrl     string `json:"payment_url"`
+}
+
 // OrderNotifyResponse 订单异步回调结构体
 type OrderNotifyResponse struct {
 	TradeId            string  `json:"trade_id"`             //  epusdt订单号

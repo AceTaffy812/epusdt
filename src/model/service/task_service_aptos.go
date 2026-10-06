@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/assimon/luuu/model"
 	"github.com/assimon/luuu/model/data"
 	"github.com/assimon/luuu/model/request"
 	"github.com/assimon/luuu/mq"
@@ -22,7 +23,6 @@ import (
 
 const (
 	AptosGraphqlUrl = "https://api.mainnet.aptoslabs.com/v1/graphql"
-	AptosAssetType  = "0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b" // USDt
 )
 
 type aptosGraphqlResp struct {
@@ -43,7 +43,7 @@ type aptosGraphqlResp struct {
 	} `json:"data"`
 }
 
-func AptosApiScan(token string, wg *sync.WaitGroup) {
+func AptosApiScan(asset model.PaymentAsset, token string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer func() {
 		if err := recover(); err != nil {
@@ -52,9 +52,7 @@ func AptosApiScan(token string, wg *sync.WaitGroup) {
 		}
 	}()
 
-	tokenWithChainPrefix := "aptos:" + token
-
-	if !data.IsWalletLocked(tokenWithChainPrefix) {
+	if !data.IsWalletLocked(asset.Chain, asset.Symbol, token) {
 		return
 	}
 
@@ -112,7 +110,7 @@ func AptosApiScan(token string, wg *sync.WaitGroup) {
 		return
 	}
 
-	decimalDivisor := decimal.NewFromFloat(1000000)
+	decimalDivisor := decimal.New(1, int32(asset.Decimals))
 
 	// 逐条交易检查
 	for _, tx := range gqlResp.Data.AccountTransactions {
@@ -141,7 +139,7 @@ func AptosApiScan(token string, wg *sync.WaitGroup) {
 			if !act.IsTransactionSuccess {
 				continue
 			}
-			if !strings.EqualFold(act.AssetType, AptosAssetType) {
+			if !strings.EqualFold(act.AssetType, asset.Contract) {
 				continue
 			}
 			if !strings.Contains(strings.ToLower(act.Type), "::deposit") {
@@ -156,7 +154,7 @@ func AptosApiScan(token string, wg *sync.WaitGroup) {
 			amount := amountDecimal.InexactFloat64()
 
 			// 根据 钱包地址 + amount 查找 tradeId（沿用你现有逻辑）
-			tradeId, err := data.GetTradeIdByWalletAddressAndAmount(tokenWithChainPrefix, amount)
+			tradeId, err := data.GetTradeIdByWalletAddressAndAmount(asset.Chain, asset.Symbol, token, amount)
 			if err != nil {
 				panic(err)
 			}
@@ -173,17 +171,23 @@ func AptosApiScan(token string, wg *sync.WaitGroup) {
 			// 区块/交易的确认时间必须在订单创建时间之后
 			createTime := order.CreatedAt.TimestampWithMillisecond()
 			if txTimestampMillis < createTime {
-				log.Sugar.Warnf("Orders cannot actually be matched: %s <-> aptos_tx_version:%d", tradeId, tx.TransactionVersion)
+				warnOrderCannotActuallyBeMatchedOnce(
+					asset.Chain,
+					tradeId,
+					fmt.Sprintf("aptos_tx_version:%d", tx.TransactionVersion),
+				)
 				continue
 			}
 
 			// 调用订单处理（沿用你的 request 结构）
 			req := &request.OrderProcessingRequest{
-				TokenWithChainPrefix: tokenWithChainPrefix,
-				TradeId:              tradeId,
-				Amount:               amount,
+				Address: token,
+				TradeId: tradeId,
+				Amount:  amount,
 				// 使用 transaction_version 作为区块/交易 id 表示
 				BlockTransactionId: fmt.Sprintf("%d", tx.TransactionVersion),
+				Chain:              asset.Chain,
+				Asset:              asset.Symbol,
 			}
 			err = OrderProcessing(req)
 			if err != nil {
@@ -197,21 +201,24 @@ func AptosApiScan(token string, wg *sync.WaitGroup) {
 			// 发送机器人消息（格式可按需调整）
 			msgTpl := `
 <b>📢📢 有新的 Aptos 交易支付成功！</b>
+<pre>收款交易类型：%s</pre>
 <pre>交易号：%s</pre>
 <pre>订单号：%s</pre>
 <pre>请求支付金额：%f cny</pre>
-<pre>实际支付金额：%f token</pre>
+<pre>实际支付金额：%f %s</pre>
 <pre>钱包地址：%s</pre>
 <pre>订单创建时间：%s</pre>
 <pre>支付成功时间：%s</pre>
 <pre>aptos_tx_version: %d</pre>
 `
 			msg := fmt.Sprintf(msgTpl,
+				asset.Chain+"_"+asset.Symbol,
 				order.TradeId,
 				order.OrderId,
 				order.Amount,
 				order.ActualAmount,
-				tokenWithChainPrefix,
+				strings.ToUpper(asset.Symbol),
+				order.WalletAddress,
 				order.CreatedAt.ToDateTimeString(),
 				carbon.Now().ToDateTimeString(),
 				tx.TransactionVersion,

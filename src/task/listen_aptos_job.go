@@ -3,6 +3,7 @@ package task
 import (
 	"sync"
 
+	"github.com/assimon/luuu/config"
 	"github.com/assimon/luuu/model"
 	"github.com/assimon/luuu/model/data"
 	"github.com/assimon/luuu/model/service"
@@ -29,8 +30,10 @@ func (r ListenAptosJob) Run() {
 		return
 	}
 	for _, address := range walletAddress {
-		wg.Add(1)
-		go service.AptosApiScan(address.Token, &wg)
+		for _, asset := range model.EnabledPaymentAssets(model.ChainNameAptos, config.IsPaymentAssetEnabled) {
+			wg.Add(1)
+			go service.AptosApiScan(asset, address.Token, &wg)
+		}
 	}
 
 	wg.Wait()

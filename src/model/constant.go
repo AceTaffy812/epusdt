@@ -7,4 +7,5 @@ const (
 	ChainNameETH        = "eth"
 	ChainNamePolygonPOS = "polygon"
 	ChainNameAptos      = "aptos"
+	ChainNamePlasma     = "plasma"
 )
