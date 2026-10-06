@@ -1,4 +1,18 @@
-# 链与资产
+# 链、资产与 API 使用情况
+
+## 支持的链与 API 使用情况
+
+| 链 | 转账扫描 API | API Key |
+| --- | --- | --- |
+| `trc20` | Tronscan | 暂时无需 API Key |
+| `aptos` | Aptoslabs | 暂时无需 API Key |
+| `bsc` | Etherscan | 必须填写 API Key（必须付费账号） |
+| `eth` | Etherscan | 必须填写 API Key（免费账号可用） |
+| `avax-c` | Etherscan | 必须填写 API Key（必须付费账号） |
+| `plasma` | Etherscan | 必须填写 API Key（免费账号可用） |
+| `polygon` | Etherscan | 必须填写 API Key（免费账号可用） |
+
+## 支持的资产
 
 创建订单通过既有 `channel` 参数选择资产。未提供 `channel` 时为 `polygon` 的 USDT；所有历史基础链值仍表示 USDT。复合通道使用 `链名_币种` 格式，例如 `polygon_usdc`。
 
